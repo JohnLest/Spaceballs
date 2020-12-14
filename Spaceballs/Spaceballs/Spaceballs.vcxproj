@@ -18,6 +18,40 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Ecran\Ecran.c" />
+    <ClCompile Include="GrilleSDL\GrilleSDL.c" />
+    <ClCompile Include="Ressources\Ressources.c" />
+    <ClCompile Include="SpaceBalls.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Ecran\Ecran.h" />
+    <ClInclude Include="GrilleSDL\GrilleSDL.h" />
+    <ClInclude Include="Ressources\Ressources.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="images\BilleBleue32.bmp" />
+    <Image Include="images\BilleGrise32.bmp" />
+    <Image Include="images\BilleJaune32.bmp" />
+    <Image Include="images\BilleMagenta32.bmp" />
+    <Image Include="images\BilleMauve32.bmp" />
+    <Image Include="images\BilleRouge32.bmp" />
+    <Image Include="images\BilleVerte32.bmp" />
+    <Image Include="images\ImageFond.bmp" />
+    <Image Include="images\Mur32.bmp" />
+    <Image Include="images\Numero1.bmp" />
+    <Image Include="images\Numero2.bmp" />
+    <Image Include="images\Numero3.bmp" />
+    <Image Include="images\Numero4.bmp" />
+    <Image Include="images\RaquetteJaune32_160.bmp" />
+    <Image Include="images\RaquetteMauve32_160.bmp" />
+    <Image Include="images\RaquetteRouge32_160.bmp" />
+    <Image Include="images\RaquetteVerte32_160.bmp" />
+    <Image Include="images\Verrou32.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
@@ -138,10 +172,20 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClCompile Include="App.c" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
+    <Import Project="..\packages\pthreads.redist.2.9.1.4\build\native\pthreads.redist.targets" Condition="Exists('..\packages\pthreads.redist.2.9.1.4\build\native\pthreads.redist.targets')" />
+    <Import Project="..\packages\pthreads.2.9.1.4\build\native\pthreads.targets" Condition="Exists('..\packages\pthreads.2.9.1.4\build\native\pthreads.targets')" />
+    <Import Project="..\packages\sdl2.redist.2.0.5\build\native\sdl2.redist.targets" Condition="Exists('..\packages\sdl2.redist.2.0.5\build\native\sdl2.redist.targets')" />
+    <Import Project="..\packages\sdl2.2.0.5\build\native\sdl2.targets" Condition="Exists('..\packages\sdl2.2.0.5\build\native\sdl2.targets')" />
   </ImportGroup>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>Ce projet fait référence à des packages NuGet qui sont manquants sur cet ordinateur. Utilisez l'option de restauration des packages NuGet pour les télécharger. Pour plus d'informations, consultez http://go.microsoft.com/fwlink/?LinkID=322105. Le fichier manquant est : {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\pthreads.redist.2.9.1.4\build\native\pthreads.redist.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\pthreads.redist.2.9.1.4\build\native\pthreads.redist.targets'))" />
+    <Error Condition="!Exists('..\packages\pthreads.2.9.1.4\build\native\pthreads.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\pthreads.2.9.1.4\build\native\pthreads.targets'))" />
+    <Error Condition="!Exists('..\packages\sdl2.redist.2.0.5\build\native\sdl2.redist.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\sdl2.redist.2.0.5\build\native\sdl2.redist.targets'))" />
+    <Error Condition="!Exists('..\packages\sdl2.2.0.5\build\native\sdl2.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\sdl2.2.0.5\build\native\sdl2.targets'))" />
+  </Target>
 </Project>
