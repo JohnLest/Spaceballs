@@ -47,9 +47,13 @@ typedef struct
   int couleur;
 } S_BILLE;
 
+S_BILLE tabBille[12];
+
+void  generateBille(int);
 void  initGrille();
 char  ZoneRestreinte(int l,int c);
 int   NbBillesZone();
+unsigned long getSeed();
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 int main(int argc,char* argv[])
@@ -78,7 +82,7 @@ int main(int argc,char* argv[])
     event = ReadEvent();
     if (event.type == CROIX) ok = 1;
     if (event.type == CLAVIER && event.touche == 'q') ok = 1;
-    if (event.type == CLIC_GAUCHE) DessineBille(ROUGE,event.ligne,event.colonne);
+    if (event.type == CLIC_GAUCHE) generateBille(ROUGE);
   }
 
   // Fermeture de la grille de jeu (SDL)
@@ -87,6 +91,27 @@ int main(int argc,char* argv[])
   printf("OK\n"); fflush(stdout);
 
   exit(0);
+}
+
+unsigned long getSeed(){
+    struct timespec spec;
+    clock_gettime(CLOCK_REALTIME, &spec);
+    return (spec.tv_sec*1000000000 + spec.tv_nsec);
+}
+
+void generateBille(int color){
+    srand(getSeed());
+    int ligne;
+    int col;
+    while (1){
+        ligne = rand() % 11 + 4;
+        col = rand() % 11 + 4;
+        if((ligne < 6 || ligne > 12) || (col < 6 || col > 12)) break;
+    }
+
+    tabBille[0] = {ligne, col, 0, color};
+    printf("Bille au coord %d - %d de couleur %d\n",tabBille[0].L, tabBille[0].C, tabBille[0].couleur);
+    DessineBille(color, ligne, col);
 }
 
 /*********************************************************************************************/
