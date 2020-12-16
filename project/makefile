@@ -1,8 +1,8 @@
 .SILENT:
 
-GRILLESDL=project/GrilleSDL
-RESSOURCES=project/Ressources
-ECRAN=project/Ecran
+GRILLESDL=GrilleSDL
+RESSOURCES=Ressources
+ECRAN=Ecran
 
 CC = g++ -DKNOPPIX -I$(ECRAN) -I$(GRILLESDL) -I$(RESSOURCES) -I /opt/guengel/include/SDL
 OBJS = $(GRILLESDL)/GrilleSDL.o $(RESSOURCES)/Ressources.o $(ECRAN)/Ecran.o
@@ -10,9 +10,9 @@ PROGRAMS = SpaceBalls
 
 ALL: $(PROGRAMS)
 
-SpaceBalls:	project/SpaceBalls.c $(OBJS)
+SpaceBalls:	SpaceBalls.c $(OBJS)
 	echo Creation de SpaceBalls...
-	$(CC) project/SpaceBalls.c -o SpaceBalls $(OBJS) -lrt -lpthread -lSDL
+	$(CC) SpaceBalls.c -o SpaceBalls $(OBJS) -lrt -lpthread -lSDL
 
 $(GRILLESDL)/GrilleSDL.o:	$(GRILLESDL)/GrilleSDL.c $(GRILLESDL)/GrilleSDL.h
 		echo Creation de GrilleSDL.o ...
