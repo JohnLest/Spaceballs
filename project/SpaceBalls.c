@@ -3,9 +3,9 @@
 #include <unistd.h>
 #include <pthread.h>
 #include <signal.h>
-#include <time.h>
 #include "GrilleSDL/GrilleSDL.h"
 #include "Ressources/Ressources.h"
+#include "Bille/Bille.h"
 
 // Dimensions de la grille de jeu
 #define NB_LIGNES   19
@@ -39,29 +39,16 @@ int tab[NB_LIGNES][NB_COLONNES]
    {0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0},
    {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1}};
 
-typedef struct
-{
-  int L;
-  int C;
-  int dir;
-  int couleur;
-} S_BILLE;
 
-S_BILLE tabBille[12];
-
-void  generateBille(int);
 void  initGrille();
 char  ZoneRestreinte(int l,int c);
 int   NbBillesZone();
-unsigned long getSeed();
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 int main(int argc,char* argv[])
 {
   EVENT_GRILLE_SDL event;
   char ok;
- 
-  srand((unsigned)time(NULL));
 
   // Ouverture de la fenetre graphique
   printf("(THREAD MAIN %d) Ouverture de la fenetre graphique\n",pthread_self()); fflush(stdout);
@@ -82,7 +69,10 @@ int main(int argc,char* argv[])
     event = ReadEvent();
     if (event.type == CROIX) ok = 1;
     if (event.type == CLAVIER && event.touche == 'q') ok = 1;
-    if (event.type == CLIC_GAUCHE) generateBille(ROUGE);
+    if (event.type == CLIC_GAUCHE) {
+        S_BILLE bille = generateBille(ROUGE);
+        printf("Bille au coord %d - %d de couleur %d\n",bille.L, bille.C, bille.couleur);
+    }
   }
 
   // Fermeture de la grille de jeu (SDL)
@@ -91,27 +81,6 @@ int main(int argc,char* argv[])
   printf("OK\n"); fflush(stdout);
 
   exit(0);
-}
-
-unsigned long getSeed(){
-    struct timespec spec;
-    clock_gettime(CLOCK_REALTIME, &spec);
-    return (spec.tv_sec*1000000000 + spec.tv_nsec);
-}
-
-void generateBille(int color){
-    srand(getSeed());
-    int ligne;
-    int col;
-    while (1){
-        ligne = rand() % 11 + 4;
-        col = rand() % 11 + 4;
-        if((ligne < 6 || ligne > 12) || (col < 6 || col > 12)) break;
-    }
-
-    tabBille[0] = {ligne, col, 0, color};
-    printf("Bille au coord %d - %d de couleur %d\n",tabBille[0].L, tabBille[0].C, tabBille[0].couleur);
-    DessineBille(color, ligne, col);
 }
 
 /*********************************************************************************************/

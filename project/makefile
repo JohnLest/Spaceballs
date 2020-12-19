@@ -3,9 +3,11 @@
 GRILLESDL=GrilleSDL
 RESSOURCES=Ressources
 ECRAN=Ecran
+BILLE=Bille
+TOOLS=Tools
 
 CC = g++ -DKNOPPIX -I$(ECRAN) -I$(GRILLESDL) -I$(RESSOURCES) -I /opt/guengel/include/SDL
-OBJS = $(GRILLESDL)/GrilleSDL.o $(RESSOURCES)/Ressources.o $(ECRAN)/Ecran.o
+OBJS = $(GRILLESDL)/GrilleSDL.o $(RESSOURCES)/Ressources.o $(ECRAN)/Ecran.o $(BILLE)/Bille.o $(TOOLS)/Tools.o
 PROGRAMS = SpaceBalls
 
 ALL: $(PROGRAMS)
@@ -27,6 +29,14 @@ $(RESSOURCES)/Ressources.o:	$(RESSOURCES)/Ressources.c $(RESSOURCES)/Ressources.
 $(ECRAN)/Ecran.o:	$(ECRAN)/Ecran.c $(ECRAN)/Ecran.h
 		$(CC) $(ECRAN)/Ecran.c -c
 		mv Ecran.o $(ECRAN)/Ecran.o
+
+$(BILLE)/Bille.o:	$(BILLE)/Bille.c $(BILLE)/Bille.h
+		$(CC) $(BILLE)/Bille.c -c
+		mv Bille.o $(BILLE)/Bille.o
+
+$(TOOLS)/Tools.o:	$(TOOLS)/Tools.c $(TOOLS)/Tools.h
+		$(CC) $(TOOLS)/Tools.c -c
+		mv Tools.o $(TOOLS)/Tools.o
 
 clean:
 	@rm -f $(OBJS) core
