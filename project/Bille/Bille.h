@@ -19,6 +19,6 @@ typedef struct
     int couleur;
 } S_BILLE;
 
-S_BILLE generateBille(int);
+S_BILLE generateBille(int, int m[19][19]);
 
 #endif //SPACEBALLS_BILLE_H

@@ -4,7 +4,7 @@
 
 #include "Bille.h"
 
-S_BILLE generateBille(int color){
+S_BILLE generateBille(int color, int tab[19][19]){
     srand(getSeed());
     int ligne;
     int col;
@@ -12,7 +12,8 @@ S_BILLE generateBille(int color){
     while (1){
         ligne = rand() % 11 + 4;
         col = rand() % 11 + 4;
-        if((ligne < 6 || ligne > 12) || (col < 6 || col > 12)) break;
+        if(((ligne < 6 || ligne > 12) || (col < 6 || col > 12)) && tab[ligne][col] != 2 )
+            break;
     }
 
     bille = {ligne, col, 0, color};
