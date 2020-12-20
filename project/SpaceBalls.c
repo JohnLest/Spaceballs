@@ -72,9 +72,10 @@ int main(int argc,char* argv[])
     if (event.type == CROIX) ok = 1;
     if (event.type == CLAVIER && event.touche == 'q') ok = 1;
     if (event.type == CLIC_GAUCHE) {
-        S_BILLE bille = generateBille(ROUGE, tab);
-        printf("Bille au coord %d - %d de couleur %d\n",bille.L, bille.C, bille.couleur);
-        tab[bille.L][bille.C] = BILLE;
+        S_BILLE *bille = NewBille(ROUGE, 0);
+        bille->generate(bille, tab);
+        printf("Bille au coord %d - %d de couleur %d\n",bille->L, bille->C, bille->couleur);
+        tab[bille->L][bille->C] = BILLE;
         /*
         int l,c,nb=0;
         for (l=0 ; l<=18 ; l++) {
