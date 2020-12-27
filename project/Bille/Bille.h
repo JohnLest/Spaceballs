@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
+#include "../GrilleSDL/GrilleSDL.h"
 #include "../Tools/Tools.h"
 #include "../Ressources/Ressources.h"
 

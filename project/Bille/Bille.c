@@ -41,7 +41,7 @@ void moveBille(S_BILLE *This){
     int time = randTool(200, 1000);
     if(time == 1000){waiting(1, 0);}
     else waiting(0, time);
-    DessineBille(GRISE, This->L, This->C);
+    EffaceCarre(This->L, This->C);
     switch (This->dir) {
         case HAUT:
             This->L--;
