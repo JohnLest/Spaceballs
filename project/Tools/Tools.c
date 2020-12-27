@@ -9,3 +9,8 @@ unsigned long getSeed(){
     clock_gettime(CLOCK_REALTIME, &spec);
     return (spec.tv_sec*1000000000 + spec.tv_nsec);
 }
+
+int randTool(int min, int max){
+    srand(getSeed());
+    return rand() % (max-min + 1) + min ;
+}

@@ -10,5 +10,6 @@
 #include <time.h>
 
 unsigned long getSeed();
+int randTool(int, int);
 
 #endif //SPACEBALLS_TOOLS_H

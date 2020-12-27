@@ -6,7 +6,7 @@ ECRAN=Ecran
 BILLE=Bille
 TOOLS=Tools
 
-CC = g++ -DKNOPPIX -I$(ECRAN) -I$(GRILLESDL) -I$(RESSOURCES) -I /opt/guengel/include/SDL
+CC = gcc -DKNOPPIX -I$(ECRAN) -I$(GRILLESDL) -I$(RESSOURCES) -I /opt/guengel/include/SDL
 OBJS = $(GRILLESDL)/GrilleSDL.o $(RESSOURCES)/Ressources.o $(ECRAN)/Ecran.o $(BILLE)/Bille.o $(TOOLS)/Tools.o
 PROGRAMS = SpaceBalls
 

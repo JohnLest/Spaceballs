@@ -24,10 +24,10 @@ static void InitBille(S_BILLE* This){
 }
 
 void generateBille(S_BILLE *This, int tab[19][19]){
-    srand(getSeed());
+
     while (1){
-        This->L = rand() % 11 + 4;
-        This->C = rand() % 11 + 4;
+        This->L = randTool(4, 14);
+        This->C = randTool(4, 14);
         if(((This->L < 6 || This->L > 12) || (This->C < 6 || This->C > 12)) && tab[This->L][This->C] != 2 )
             break;
     }

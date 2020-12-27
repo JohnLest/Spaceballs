@@ -16,6 +16,7 @@ typedef struct S_BILLE
     void(*generate)(struct S_BILLE*, int m[19][19]);
     void (*free)(struct S_BILLE*);
 
+    pthread thread;
     int L;
     int C;
     int dir;
