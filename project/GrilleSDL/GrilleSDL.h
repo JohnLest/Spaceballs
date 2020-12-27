@@ -49,6 +49,7 @@ int AjouteSprite(int code,const char* nomFichier);
 int AjouteSpriteAFondTransparent(int code,const char* nomFichier,int Rf,int Gf,int Bf);
 // (Rf,Gf,Bf) represente la couleur qui sera affichee de maniere transparente, laissant apparaitre le fond
 int DessineSprite(int L,int C,int code);
+int EffaceSprite(int L, int C, int code);
 EVENT_GRILLE_SDL ReadEvent();
 // Fonction bloquante permettant de lire un evenement clavier, clic souris ou croix de la fenetre
 

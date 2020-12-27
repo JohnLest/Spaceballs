@@ -16,6 +16,8 @@ S_BILLE* NewBille(int color, int dir){
 
 static void InitBille(S_BILLE* This){
     This->generate = generateBille;
+    This->move = moveBille;
+    This->changeDir = changeDirection;
     This->free = freeBille;
     This->L = 0;
     This->C = 0;
@@ -24,14 +26,54 @@ static void InitBille(S_BILLE* This){
 }
 
 void generateBille(S_BILLE *This, int tab[19][19]){
-
     while (1){
         This->L = randTool(4, 14);
         This->C = randTool(4, 14);
         if(((This->L < 6 || This->L > 12) || (This->C < 6 || This->C > 12)) && tab[This->L][This->C] != 2 )
             break;
     }
+    DessineBille(GRISE, This->L, This->C);
+    waiting(0, 500);
     DessineBille(This->couleur, This->L, This->C);
+}
+
+void moveBille(S_BILLE *This){
+    int time = randTool(200, 1000);
+    if(time == 1000){waiting(1, 0);}
+    else waiting(0, time);
+    DessineBille(GRISE, This->L, This->C);
+    switch (This->dir) {
+        case HAUT:
+            This->L--;
+            break;
+        case BAS:
+            This->L++;
+            break;
+        case GAUCHE:
+            This->C--;
+            break;
+        case DROITE:
+            This->C++;
+            break;
+    }
+    DessineBille(This->couleur, This->L, This->C);
+}
+
+void changeDirection(S_BILLE *This){
+    switch (This->dir) {
+        case HAUT:
+            This->dir = BAS;
+            break;
+        case BAS:
+            This->dir = HAUT;
+            break;
+        case GAUCHE:
+            This->dir = DROITE;
+            break;
+        case DROITE:
+            This->dir = GAUCHE;
+            break;
+    }
 }
 
 void freeBille(S_BILLE* This){

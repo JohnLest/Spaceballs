@@ -14,3 +14,11 @@ int randTool(int min, int max){
     srand(getSeed());
     return rand() % (max-min + 1) + min ;
 }
+
+void waiting(int sec, int milli){
+    struct timespec waiting, _waiting;
+    waiting.tv_sec = sec;
+    waiting.tv_nsec = milli * 100000L;
+    nanosleep(&waiting, &_waiting);
+
+}

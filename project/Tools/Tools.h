@@ -11,5 +11,6 @@
 
 unsigned long getSeed();
 int randTool(int, int);
+void waiting(int, int);
 
 #endif //SPACEBALLS_TOOLS_H

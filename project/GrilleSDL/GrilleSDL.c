@@ -456,6 +456,7 @@ int DessineSprite(int L,int C,int code)
     return -4;
   }
 
+
   SDL_UpdateRect(maGrille.ecran,rect.x,rect.y,maGrille.sprites[i].largeur,maGrille.sprites[i].hauteur);
 
   pthread_mutex_unlock(&(maGrille.mutexG));
