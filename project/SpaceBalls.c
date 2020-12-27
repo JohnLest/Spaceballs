@@ -10,6 +10,7 @@
 // Dimensions de la grille de jeu
 #define NB_LIGNES   19
 #define NB_COLONNES 19
+#define NB_BILLES 12
 
 // Macros utilisees dans le tableau tab
 #define VIDE                     0
@@ -43,8 +44,10 @@ void initGrille();
 char ZoneRestreinte(int l, int c);
 int NbBillesZone();
 void *mainThread(void *);
+void *billeThread(void *);
 
-S_BILLE tabBill[12];
+S_BILLE tabBill[NB_BILLES];
+pthread_t _billeThread[NB_BILLES];
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 int main(int argc, char *argv[]) {
@@ -86,22 +89,24 @@ void *mainThread(void *arg) {
         if (event.type == CROIX) ok = 1;
         if (event.type == CLAVIER && event.touche == 'q') ok = 1;
         if (event.type == CLIC_GAUCHE) {
-            S_BILLE *bille = NewBille(randTool(400001, 400006), randTool(0, 3));
-            bille->generate(bille, tab);
-            printf("Bille au coord %d - %d de couleur %d\n", bille->L, bille->C, bille->couleur);
-            tab[bille->L][bille->C] = BILLE;
-            /*
-            int l,c,nb=0;
-            for (l=0 ; l<=18 ; l++) {
-                printf("\n");
-                for (c = 0; c <= 18; c++)
-                    printf("%d ", tab[l][c]);
+            for (int i = 0; i <NB_BILLES; ++i) {
+                pthread_create(&_billeThread[i], NULL, billeThread, NULL);
             }
-            */
         }
     }
 
+    for (int i = 0; i < NB_BILLES; ++i) {
+        pthread_join(_billeThread, NULL);
+    }
     return NULL;
+}
+
+void *billeThread(void *arg){
+    S_BILLE *bille = NewBille(randTool(400001, 400006), randTool(0, 3));
+    bille->generate(bille, tab);
+    printf("Bille au coord %d - %d de couleur %d\n", bille->L, bille->C, bille->couleur);
+    tab[bille->L][bille->C] = BILLE;
+    return  NULL;
 }
 
 /*********************************************************************************************/
