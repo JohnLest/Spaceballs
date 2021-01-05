@@ -20,7 +20,7 @@
 
 typedef struct TABLE{
     int tab[NB_LIGNES][NB_COLONNES];
-    S_BILLE tabBill[NB_BILLES];
+    int tabPointBilles[NB_BILLES];
     pthread_t billeThread[NB_BILLES];
     pthread_mutex_t mutexTab;
 
@@ -54,13 +54,13 @@ static TABLE table = {
 void initGrille();
 char ZoneRestreinte(int l, int c);
 int NbBillesZone();
-void *mainThread(void *);
-void *billeThread(void *);
+void *lanceBilleThread(void *);
+void *billeThread(S_BILLE *);
 int regarde(S_BILLE*);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 int main(int argc, char *argv[]) {
-    pthread_t _mainThread;
+    pthread_t _lanceBilleThread;
 
     // Ouverture de la fenetre graphique
     printf("(THREAD MAIN %d) Ouverture de la fenetre graphique\n", pthread_self());
@@ -74,10 +74,20 @@ int main(int argc, char *argv[]) {
 
     // Initialisation de la grille de jeu
     initGrille();
+    // Code d'exemple pour le ReadEvent
+    EVENT_GRILLE_SDL event;
+    char ok;
+    ok = 0;
+    while (!ok) {
+        event = ReadEvent();
+        if (event.type == CROIX) ok = 1;
+        if (event.type == CLAVIER && event.touche == 'q') ok = 1;
+        if (event.type == CLIC_GAUCHE) {
+            pthread_create(&_lanceBilleThread, NULL, lanceBilleThread, NULL);
+        }
+    }
 
-
-    pthread_create(&_mainThread, NULL, mainThread, NULL);
-    pthread_join(_mainThread, NULL);
+    pthread_join(_lanceBilleThread, NULL);
 
     // Fermeture de la grille de jeu (SDL)
     printf("(THREAD MAIN %d) Fermeture de la fenetre graphique...", pthread_self());
@@ -89,47 +99,56 @@ int main(int argc, char *argv[]) {
     exit(0);
 }
 
-void *mainThread(void *arg) {
-    // Code d'exemple pour le ReadEvent
-    EVENT_GRILLE_SDL event;
-    char ok;
-    ok = 0;
-    while (!ok) {
-        event = ReadEvent();
-        if (event.type == CROIX) ok = 1;
-        if (event.type == CLAVIER && event.touche == 'q') ok = 1;
-        if (event.type == CLIC_GAUCHE) {
-            for (int i = 0; i <NB_BILLES; ++i) {
-                pthread_create(&table.billeThread[i], NULL, billeThread, NULL);
-            }
-
-        }
+void *lanceBilleThread(void *arg) {
+    printf("Thread Lanceur de billes\n");
+    int couleur = ROUGE;
+    int dir = HAUT;
+    for (int i = 0; i <NB_BILLES; ++i) {
+        waiting(4, 0);
+        S_BILLE *bille = NewBille(couleur, randTool(0, 3));
+        table.tabPointBilles[i] = bille;
+        pthread_create(&table.billeThread[i], NULL, billeThread, bille);
+        if(couleur == MAGENTA) couleur = ROUGE;
+        else couleur++;
+        if(dir == GAUCHE) dir = HAUT;
+        else dir++;
     }
+    /*
+    printf("1");
+    for (int i = 0; i < NB_BILLES; ++i) {
+        pthread_cancel(table.billeThread[i]);
+    }
+    */
+    printf("2");
     pthread_join(table.billeThread[0], NULL);
     for (int i = 0; i < NB_BILLES; ++i) {
         pthread_join(table.billeThread[i], NULL);
     }
+    printf("3");
     return NULL;
 }
 
-void *billeThread(void *arg){
-    S_BILLE *bille = NewBille(randTool(400001, 400006), randTool(0, 3));
+void *billeThread(struct S_BILLE *bille){
     pthread_mutex_lock(&table.mutexTab);
     bille->generate(bille, table.tab);
     pthread_mutex_unlock(&table.mutexTab);
     printf("Bille au coord %d - %d de couleur %d\n", bille->L, bille->C, bille->couleur);
     table.tab[bille->L][bille->C] = BILLE;
-
+/*
     while (1) {
-        //mutex_lock(&table.mutexTab);
+
         if(regarde(bille) != VIDE) { bille->changeDir(bille); }
         else {
+            pthread_mutex_lock(&table.mutexTab);
             table.tab[bille->L][bille->C] = VIDE;
+            pthread_mutex_unlock(&table.mutexTab);
             bille->move(bille);
+            pthread_mutex_lock(&table.mutexTab);
             table.tab[bille->L][bille->C] = BILLE;
+            pthread_mutex_unlock(&table.mutexTab);
         }
-        //pthread_mutex_unlock(&table.mutexTab);
     }
+*/
     return  NULL;
 }
 
@@ -150,12 +169,8 @@ int regarde(S_BILLE* bille){
 void initGrille() {
     int l, c;
     for (l = 0; l < NB_LIGNES; l++) {
-        printf(" Ligne num %d\n", l);
-
         for (c = 0; c < NB_COLONNES; c++) {
-            printf(" col num %d\n", c);
             if (table.tab[l][c] == MUR) {
-                printf("Dessine Mur");
                 DessineMur(l, c);
             }
         }

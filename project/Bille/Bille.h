@@ -13,10 +13,11 @@
 #include "../Ressources/Ressources.h"
 
 // Macro pour la direction des billes
-#define HAUT            0
-#define BAS             1
-#define GAUCHE          3
-#define DROITE          4
+#define HAUT            1001
+#define DROITE          1002
+#define BAS             1003
+#define GAUCHE          1004
+
 
 typedef struct S_BILLE
 {
