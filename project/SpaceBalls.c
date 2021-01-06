@@ -23,6 +23,7 @@ typedef struct TABLE{
     int tabPointBilles[NB_BILLES];
     pthread_t billeThread[NB_BILLES];
     pthread_mutex_t mutexTab;
+    pthread_cond_t condTab;
 
 }TABLE;
 
@@ -56,7 +57,8 @@ char ZoneRestreinte(int l, int c);
 int NbBillesZone();
 void *lanceBilleThread(void *);
 void *billeThread(S_BILLE *);
-int regarde(S_BILLE*);
+int *regarde(S_BILLE*);
+int changeZoneRest(S_BILLE*);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 int main(int argc, char *argv[]) {
@@ -100,13 +102,11 @@ int main(int argc, char *argv[]) {
 }
 
 void *lanceBilleThread(void *arg) {
-    printf("Thread Lanceur de billes\n");
     int couleur = ROUGE;
     int dir = HAUT;
     for (int i = 0; i <NB_BILLES; ++i) {
-        waiting(4, 0);
-        S_BILLE *bille = NewBille(couleur, randTool(0, 3));
-        table.tabPointBilles[i] = bille;
+        //waiting(2, 0);
+        S_BILLE *bille = NewBille(couleur, dir);
         pthread_create(&table.billeThread[i], NULL, billeThread, bille);
         if(couleur == MAGENTA) couleur = ROUGE;
         else couleur++;
@@ -134,12 +134,23 @@ void *billeThread(struct S_BILLE *bille){
     pthread_mutex_unlock(&table.mutexTab);
     printf("Bille au coord %d - %d de couleur %d\n", bille->L, bille->C, bille->couleur);
     table.tab[bille->L][bille->C] = BILLE;
-/*
-    while (1) {
 
-        if(regarde(bille) != VIDE) { bille->changeDir(bille); }
+    while (1) {
+        int time = randTool(200, 1000);
+        if(time == 1000){waiting(1, 0);}
+        else waiting(0, time);
+        waiting(1, 0);
+        int *coord;
+        coord = regarde(bille);
+        int etatZone = changeZoneRest(bille);
+        if(table.tab[*(coord)][*(coord + 1 )] != VIDE) { bille->changeDir(bille); }
         else {
             pthread_mutex_lock(&table.mutexTab);
+            if (etatZone == 1 && NbBillesZone() >=3){
+                pthread_cond_wait(&table.condTab,&table.mutexTab );
+            } else if(etatZone == 2){
+                pthread_cond_signal(&table.condTab);
+            }
             table.tab[bille->L][bille->C] = VIDE;
             pthread_mutex_unlock(&table.mutexTab);
             bille->move(bille);
@@ -148,23 +159,56 @@ void *billeThread(struct S_BILLE *bille){
             pthread_mutex_unlock(&table.mutexTab);
         }
     }
-*/
+
     return  NULL;
 }
 
-int regarde(S_BILLE* bille){
+
+
+int *regarde(S_BILLE* bille){
+    static int coord[2];
     switch (bille->dir) {
         case HAUT:
-            return table.tab[bille->L - 1][bille->C];
+            coord[0] = bille->L - 1;
+            coord[1] = bille->C;
+            break;
+            //return table.tab[bille->L - 1][bille->C];
         case BAS:
-            return table.tab[bille->L + 1][bille->C];
+            coord[0] = bille->L + 1;
+            coord[1] = bille->C;
+            //return table.tab[bille->L + 1][bille->C];
+            break;
         case GAUCHE:
-            return table.tab[bille->L ][bille->C - 1];
+            coord[0] = bille->L;
+            coord[1] = bille->C - 1;
+            //return table.tab[bille->L ][bille->C - 1];
+            break;
         case DROITE:
-            return table.tab[bille->L ][bille->C + 1];
+            coord[0] = bille->L;
+            coord[1] = bille->C + 1 ;
+            //return table.tab[bille->L ][bille->C + 1];
+            break;
     }
+    return coord;
 }
 
+int changeZoneRest(S_BILLE *bille){
+    int *coord;
+    coord = regarde(bille);
+    if (!bille->redZone){
+        if(!ZoneRestreinte(*(coord), *(coord +1 ))) return 0;
+        else if(ZoneRestreinte(*(coord), *(coord +1 ))) {
+            bille->redZone = 1;
+            return 1; }
+    }
+    else if (bille->redZone){
+        if(!ZoneRestreinte(bille->L, bille->C)) {
+            bille->redZone = 0;
+            return 2; }
+        else if(ZoneRestreinte(bille->L, bille->C)) return 0;
+    }
+    return 3;
+}
 /*********************************************************************************************/
 void initGrille() {
     int l, c;

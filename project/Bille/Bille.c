@@ -23,6 +23,7 @@ static void InitBille(S_BILLE* This){
     This->C = 0;
     This->couleur = 0;
     This->dir = 0;
+    This->redZone = 0;
 }
 
 void generateBille(S_BILLE *This, int tab[19][19]){
@@ -38,9 +39,6 @@ void generateBille(S_BILLE *This, int tab[19][19]){
 }
 
 void moveBille(S_BILLE *This){
-    int time = randTool(200, 1000);
-    if(time == 1000){waiting(1, 0);}
-    else waiting(0, time);
     EffaceCarre(This->L, This->C);
     switch (This->dir) {
         case HAUT:

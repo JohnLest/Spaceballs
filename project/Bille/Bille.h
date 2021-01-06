@@ -30,6 +30,7 @@ typedef struct S_BILLE
     int C;
     int dir;
     int couleur;
+    int redZone;
 } S_BILLE;
 
 S_BILLE* NewBille(int, int);
