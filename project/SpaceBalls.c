@@ -21,8 +21,10 @@
 typedef struct TABLE{
     int tab[NB_LIGNES][NB_COLONNES];
     int tabPointBilles[NB_BILLES];
-    pthread_t billeThread[NB_BILLES];
+    int nbBilles;
+    pthread_t tabThreadsBilles[NB_BILLES];
     pthread_mutex_t mutexTab;
+    pthread_mutex_t mutexBilles;
     pthread_cond_t condTab;
 
 }TABLE;
@@ -49,6 +51,8 @@ static TABLE table = {
                  {0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0},
                  {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}},
         .mutexTab = PTHREAD_MUTEX_INITIALIZER,
+        .mutexBilles = PTHREAD_MUTEX_INITIALIZER,
+        .nbBilles = 0
 };
 
 
@@ -57,12 +61,13 @@ char ZoneRestreinte(int l, int c);
 int NbBillesZone();
 void *lanceBilleThread(void *);
 void *billeThread(S_BILLE *);
+void *verrouThread(void *);
 int *regarde(S_BILLE*);
 int changeZoneRest(S_BILLE*);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 int main(int argc, char *argv[]) {
-    pthread_t _lanceBilleThread;
+    pthread_t _lanceBilleThread, _verrouThread;
 
     // Ouverture de la fenetre graphique
     printf("(THREAD MAIN %d) Ouverture de la fenetre graphique\n", pthread_self());
@@ -86,10 +91,11 @@ int main(int argc, char *argv[]) {
         if (event.type == CLAVIER && event.touche == 'q') ok = 1;
         if (event.type == CLIC_GAUCHE) {
             pthread_create(&_lanceBilleThread, NULL, lanceBilleThread, NULL);
+            pthread_create(&_verrouThread, NULL, verrouThread, NULL);
         }
     }
-
     pthread_join(_lanceBilleThread, NULL);
+    pthread_join(_verrouThread, NULL);
 
     // Fermeture de la grille de jeu (SDL)
     printf("(THREAD MAIN %d) Fermeture de la fenetre graphique...", pthread_self());
@@ -107,7 +113,7 @@ void *lanceBilleThread(void *arg) {
     for (int i = 0; i <NB_BILLES; ++i) {
         //waiting(2, 0);
         S_BILLE *bille = NewBille(couleur, dir);
-        pthread_create(&table.billeThread[i], NULL, billeThread, bille);
+        pthread_create(&table.tabThreadsBilles[i], NULL, billeThread, bille);
         if(couleur == MAGENTA) couleur = ROUGE;
         else couleur++;
         if(dir == GAUCHE) dir = HAUT;
@@ -163,7 +169,11 @@ void *billeThread(struct S_BILLE *bille){
     return  NULL;
 }
 
-
+void *verrouThread(void *arg){
+    while (1){
+        waiting(10, 0);
+    }
+}
 
 int *regarde(S_BILLE* bille){
     static int coord[2];
