@@ -86,16 +86,23 @@ int main(int argc, char *argv[]) {
     char ok;
     ok = 0;
     while (!ok) {
+        printf("boucle principal\n");
         event = ReadEvent();
+        printf("Event read\n");
         if (event.type == CROIX) ok = 1;
         if (event.type == CLAVIER && event.touche == 'q') ok = 1;
         if (event.type == CLIC_GAUCHE) {
+            printf("CLick gauche\n");
             pthread_create(&_lanceBilleThread, NULL, lanceBilleThread, NULL);
             pthread_create(&_verrouThread, NULL, verrouThread, NULL);
         }
+
     }
-    pthread_join(_lanceBilleThread, NULL);
-    pthread_join(_verrouThread, NULL);
+
+    //pthread_join(_lanceBilleThread, NULL);
+    //pthread_join(_verrouThread, NULL);
+    pthread_cancel(_verrouThread);
+    pthread_cancel(_lanceBilleThread);
 
     // Fermeture de la grille de jeu (SDL)
     printf("(THREAD MAIN %d) Fermeture de la fenetre graphique...", pthread_self());
@@ -126,9 +133,9 @@ void *lanceBilleThread(void *arg) {
     }
     */
     printf("2");
-    pthread_join(table.billeThread[0], NULL);
+    pthread_join(table.tabThreadsBilles[0], NULL);
     for (int i = 0; i < NB_BILLES; ++i) {
-        pthread_join(table.billeThread[i], NULL);
+        pthread_join(table.tabThreadsBilles[i], NULL);
     }
     printf("3");
     return NULL;
