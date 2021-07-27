@@ -7,3 +7,7 @@
 /Spaceballs/Debug
 /Spaceballs/Spaceballs/Debug
 /Spaceballs/packages
+
+
+*.o
+project/SpaceBalls

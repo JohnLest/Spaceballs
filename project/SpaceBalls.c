@@ -59,15 +59,15 @@ static TABLE table = {
 void initGrille();
 char ZoneRestreinte(int l, int c);
 int NbBillesZone();
-void *lanceBilleThread(void *);
-void *billeThread(S_BILLE *);
-void *verrouThread(void *);
+void *lanceBille_t(void *);
+void *bille_t(S_BILLE *);
+void *verrou_t(void *);
 int *regarde(S_BILLE*);
 int changeZoneRest(S_BILLE*);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 int main(int argc, char *argv[]) {
-    pthread_t _lanceBilleThread, _verrouThread;
+    pthread_t _lanceBille_t, _verrou_t;
 
     // Ouverture de la fenetre graphique
     printf("(THREAD MAIN %d) Ouverture de la fenetre graphique\n", pthread_self());
@@ -93,16 +93,16 @@ int main(int argc, char *argv[]) {
         if (event.type == CLAVIER && event.touche == 'q') ok = 1;
         if (event.type == CLIC_GAUCHE) {
             printf("CLick gauche\n");
-            pthread_create(&_lanceBilleThread, NULL, lanceBilleThread, NULL);
-            pthread_create(&_verrouThread, NULL, verrouThread, NULL);
+            pthread_create(&_lanceBille_t, NULL, lanceBille_t, NULL);
+            pthread_create(&_verrou_t, NULL, verrou_t, NULL);
         }
 
     }
 
-    //pthread_join(_lanceBilleThread, NULL);
-    //pthread_join(_verrouThread, NULL);
-    pthread_cancel(_verrouThread);
-    pthread_cancel(_lanceBilleThread);
+    //pthread_join(_lanceBille_t, NULL);
+    //pthread_join(_verrou_t, NULL);
+    pthread_cancel(_verrou_t);
+    pthread_cancel(_lanceBille_t);
 
     // Fermeture de la grille de jeu (SDL)
     printf("(THREAD MAIN %d) Fermeture de la fenetre graphique...", pthread_self());
@@ -114,39 +114,55 @@ int main(int argc, char *argv[]) {
     exit(0);
 }
 
-void *lanceBilleThread(void *arg) {
+void *lanceBille_t(void *arg) {
     int couleur = ROUGE;
     int dir = HAUT;
     for (int i = 0; i <NB_BILLES; ++i) {
         //waiting(2, 0);
         S_BILLE *bille = NewBille(couleur, dir);
-        pthread_create(&table.tabThreadsBilles[i], NULL, billeThread, bille);
+        pthread_create(&table.tabThreadsBilles[i], NULL, bille_t, bille);
         if(couleur == MAGENTA) couleur = ROUGE;
         else couleur++;
         if(dir == GAUCHE) dir = HAUT;
         else dir++;
+        table.nbBilles ++;
     }
     /*
     printf("1");
     for (int i = 0; i < NB_BILLES; ++i) {
-        pthread_cancel(table.billeThread[i]);
+        pthread_cancel(table.bille_t[i]);
     }
-    */
+    
     printf("2");
     pthread_join(table.tabThreadsBilles[0], NULL);
     for (int i = 0; i < NB_BILLES; ++i) {
         pthread_join(table.tabThreadsBilles[i], NULL);
     }
     printf("3");
+    */
     return NULL;
 }
 
-void *billeThread(struct S_BILLE *bille){
+void verrou(int signum){
+    printf("VERROU");
+    waiting(randTool(4, 8), 0);
+}
+
+void *bille_t(struct S_BILLE *bille){ 
     pthread_mutex_lock(&table.mutexTab);
     bille->generate(bille, table.tab);
     pthread_mutex_unlock(&table.mutexTab);
     printf("Bille au coord %d - %d de couleur %d\n", bille->L, bille->C, bille->couleur);
     table.tab[bille->L][bille->C] = BILLE;
+
+    struct sigaction *act = (struct sigaction*)calloc(1, sizeof(struct sigaction));
+    act->sa_handler = verrou;
+    act->sa_flags = 0;
+    sigaction(SIGTRAP, act, NULL);
+
+    sigset_t sigset;
+    sigemptyset(&sigset);
+    sigaddset(&sigset, SIGTRAP);
 
     while (1) {
         int time = randTool(200, 1000);
@@ -172,13 +188,14 @@ void *billeThread(struct S_BILLE *bille){
             pthread_mutex_unlock(&table.mutexTab);
         }
     }
-
+    free(act);
     return  NULL;
 }
 
-void *verrouThread(void *arg){
+void *verrou_t(void *arg){
     while (1){
         waiting(10, 0);
+        pthread_kill(table.tabThreadsBilles[/*randTool(0, table.nbBilles-1)*/0], SIGTRAP);
     }
 }
 

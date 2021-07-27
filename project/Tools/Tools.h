@@ -9,8 +9,13 @@
 #include <stdlib.h>
 #include <time.h>
 
-unsigned long getSeed();
-int randTool(int, int);
-void waiting(int, int);
+/* Get a time based number to generate un randon seed  */
+unsigned long nbrForSeed();
+
+/* return a ranbom number between [min - max] */
+int randTool(int min, int max);
+
+/* Wait with nanosleep */
+void waiting(int sec, int nano);
 
 #endif //SPACEBALLS_TOOLS_H
