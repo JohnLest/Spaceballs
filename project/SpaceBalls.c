@@ -54,6 +54,9 @@ static TABLE table = {
         .mutexBilles = PTHREAD_MUTEX_INITIALIZER,
         .nbBilles = 0
 };
+pthread_key_t keyBille;
+
+
 
 
 void initGrille();
@@ -117,6 +120,7 @@ int main(int argc, char *argv[]) {
 void *lanceBille_t(void *arg) {
     int couleur = ROUGE;
     int dir = HAUT;
+    pthread_key_create(&keyBille, NULL);
     for (int i = 0; i <NB_BILLES; ++i) {
         //waiting(2, 0);
         S_BILLE *bille = NewBille(couleur, dir);
@@ -144,8 +148,13 @@ void *lanceBille_t(void *arg) {
 }
 
 void verrou(int signum){
-    printf("VERROU");
+    S_BILLE *bille_t = (S_BILLE*)pthread_getspecific(keyBille);
+    DessineVerrou(bille_t->L, bille_t->C);
     waiting(randTool(4, 8), 0);
+
+    if(bille_t->dir == GAUCHE) bille_t->dir = HAUT;
+    else bille_t->dir++;
+
 }
 
 void *bille_t(struct S_BILLE *bille){ 
@@ -186,6 +195,7 @@ void *bille_t(struct S_BILLE *bille){
             pthread_mutex_lock(&table.mutexTab);
             table.tab[bille->L][bille->C] = BILLE;
             pthread_mutex_unlock(&table.mutexTab);
+            pthread_setspecific(keyBille, (void*)bille);
         }
     }
     free(act);
@@ -195,7 +205,7 @@ void *bille_t(struct S_BILLE *bille){
 void *verrou_t(void *arg){
     while (1){
         waiting(10, 0);
-        pthread_kill(table.tabThreadsBilles[/*randTool(0, table.nbBilles-1)*/0], SIGTRAP);
+        pthread_kill(table.tabThreadsBilles[randTool(0, table.nbBilles-1)], SIGTRAP);
     }
 }
 
