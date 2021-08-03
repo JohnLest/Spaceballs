@@ -34,6 +34,8 @@ typedef struct TABLE
     pthread_cond_t condTab;
     sigset_t sigset_int;
     sigset_t sigset_trap;
+    pthread_mutex_t freezeTab;
+    pthread_cond_t freezeCond;
 
 } TABLE;
 
@@ -60,8 +62,11 @@ static TABLE table = {
          {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}},
     .mutexTab = PTHREAD_MUTEX_INITIALIZER,
     .mutexBilles = PTHREAD_MUTEX_INITIALIZER,
-    .nbBilles = 0};
+    .nbBilles = 0,
+    .freezeTab = PTHREAD_MUTEX_INITIALIZER,
+    .freezeCond = PTHREAD_COND_INITIALIZER};
 pthread_key_t keyBille;
+int freeze = 1;
 
 // Threads
 void *lanceBille_t(void *);
@@ -80,6 +85,7 @@ void verrou(int);
 void pauseJeu(int);
 void setSigaction();
 void setSigset();
+void mutexFreeze();
 
 // #endregion
 
@@ -130,10 +136,12 @@ void *lanceBille_t(void *arg)
 {
     int couleur = ROUGE;
     int dir = HAUT;
+    sigprocmask(SIG_BLOCK, &table.sigset_int, NULL);
     pthread_key_create(&keyBille, NULL);
     for (int i = 0; i < NB_BILLES; ++i)
     {
         S_BILLE *bille = NewBille(couleur, dir);
+        mutexFreeze();
         pthread_create(&table.tabThreadsBilles[i], NULL, bille_t, bille);
         if (couleur == MAGENTA)
             couleur = ROUGE;
@@ -163,6 +171,7 @@ void *lanceBille_t(void *arg)
 
 void *bille_t(struct S_BILLE *bille)
 {
+    sigprocmask(SIG_BLOCK, &table.sigset_int, NULL);
     pthread_mutex_lock(&table.mutexTab);
     bille->generate(bille, table.tab);
     pthread_mutex_unlock(&table.mutexTab);
@@ -171,6 +180,7 @@ void *bille_t(struct S_BILLE *bille)
 
     while (TRUE)
     {
+        mutexFreeze();
         int time = randTool(200, 1000);
         if (time == 1000)
         {
@@ -218,13 +228,14 @@ void *verrou_t(void *arg)
     while (TRUE)
     {
         waiting(10, 0);
+        mutexFreeze();
         pthread_kill(table.tabThreadsBilles[randTool(0, table.nbBilles - 1)], SIGTRAP);
     }
 }
 
 void *event_t(pthread_t *_pause_t){
     EVENT_GRILLE_SDL event;
-
+    sigprocmask(SIG_BLOCK, &table.sigset_int, NULL);
     while (TRUE)
     {
         event = ReadEvent();
@@ -239,6 +250,15 @@ void *event_t(pthread_t *_pause_t){
 }
 
 void *pause_t(void *arg){
+    while (TRUE)
+    {
+        pause();
+        pthread_mutex_lock(&table.freezeTab);
+        freeze = !freeze;
+        if (freeze) 
+            pthread_cond_broadcast(&table.freezeCond);
+        pthread_mutex_unlock(&table.freezeTab);
+    }
     pthread_exit(NULL);
 }
 
@@ -372,6 +392,13 @@ void setSigset(){
 
     sigemptyset(&table.sigset_int);
     sigaddset(&table.sigset_int, SIGINT);
+}
+
+void mutexFreeze(){
+    pthread_mutex_lock(&table.freezeTab);
+    if (!freeze)
+        pthread_cond_wait(&table.freezeCond, &table.freezeTab); 
+    pthread_mutex_unlock(&table.freezeTab);
 }
 
 // #endregion
