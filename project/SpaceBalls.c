@@ -183,6 +183,7 @@ void *bille_t(struct S_BILLE *bille){
         int etatZone = changeZoneRest(bille);
         if(table.tab[*(coord)][*(coord + 1 )] != VIDE) { bille->changeDir(bille); }
         else {
+            sigprocmask(SIG_BLOCK, &sigset, NULL);
             pthread_mutex_lock(&table.mutexTab);
             if (etatZone == 1 && NbBillesZone() >=3){
                 pthread_cond_wait(&table.condTab,&table.mutexTab );
@@ -191,14 +192,16 @@ void *bille_t(struct S_BILLE *bille){
             }
             table.tab[bille->L][bille->C] = VIDE;
             pthread_mutex_unlock(&table.mutexTab);
+            sigprocmask(SIG_UNBLOCK, &sigset, NULL);
             bille->move(bille);
+            sigprocmask(SIG_BLOCK, &sigset, NULL);
             pthread_mutex_lock(&table.mutexTab);
             table.tab[bille->L][bille->C] = BILLE;
             pthread_mutex_unlock(&table.mutexTab);
+            sigprocmask(SIG_UNBLOCK, &sigset, NULL);
             pthread_setspecific(keyBille, (void*)bille);
         }
     }
-    free(act);
     return  NULL;
 }
 
