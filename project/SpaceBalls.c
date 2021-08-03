@@ -58,20 +58,25 @@ static TABLE table = {
     .nbBilles = 0};
 pthread_key_t keyBille;
 
-void initGrille();
-char ZoneRestreinte(int l, int c);
-int NbBillesZone();
+// Threads
 void *lanceBille_t(void *);
 void *bille_t(S_BILLE *);
 void *verrou_t(void *);
-int *regarde(S_BILLE *);
+void *event_t(void *);
+// Gestion Zone
+void initGrille();
+char ZoneRestreinte(int l, int c);
+int NbBillesZone();
 int changeZoneRest(S_BILLE *);
+// Autre
+int *regarde(S_BILLE *);
+void verrou(int);
 
 // #endregion
 
 int main(int argc, char *argv[])
 {
-    pthread_t _lanceBille_t, _verrou_t;
+    pthread_t _lanceBille_t, _verrou_t, _event_t;
 
     // Ouverture de la fenetre graphique
     printf("(THREAD MAIN %d) Ouverture de la fenetre graphique\n", pthread_self());
@@ -86,29 +91,13 @@ int main(int argc, char *argv[])
 
     // Initialisation de la grille de jeu
     initGrille();
-    // Code d'exemple pour le ReadEvent
-    EVENT_GRILLE_SDL event;
-    char ok;
-    ok = 0;
-    while (!ok)
-    {
-        printf("boucle principal\n");
-        event = ReadEvent();
-        printf("Event read\n");
-        if (event.type == CROIX)
-            ok = 1;
-        if (event.type == CLAVIER && event.touche == 'q')
-            ok = 1;
-        if (event.type == CLIC_GAUCHE)
-        {
-            printf("CLick gauche\n");
-            pthread_create(&_lanceBille_t, NULL, lanceBille_t, NULL);
-            pthread_create(&_verrou_t, NULL, verrou_t, NULL);
-        }
-    }
 
-    //pthread_join(_lanceBille_t, NULL);
-    //pthread_join(_verrou_t, NULL);
+    pthread_create(&_lanceBille_t, NULL, lanceBille_t, NULL);
+    pthread_create(&_verrou_t, NULL, verrou_t, NULL);
+    pthread_create(&_event_t, NULL, event_t, NULL);
+
+    pthread_join(_event_t, NULL);
+
     pthread_cancel(_verrou_t);
     pthread_cancel(_lanceBille_t);
 
@@ -123,6 +112,7 @@ int main(int argc, char *argv[])
 }
 
 // #region Thread
+
 void *lanceBille_t(void *arg)
 {
     int couleur = ROUGE;
@@ -228,6 +218,22 @@ void *verrou_t(void *arg)
         pthread_kill(table.tabThreadsBilles[randTool(0, table.nbBilles - 1)], SIGTRAP);
     }
 }
+
+void *event_t(void *arg){
+    EVENT_GRILLE_SDL event;
+    while (1)
+    {
+        event = ReadEvent();
+        if (event.type == CROIX)
+            break;
+        else if (event.type == CLAVIER && event.touche == 'q')
+            break;
+        else if (event.type == CLAVIER && event.touche == 'p')
+            printf("Futur pause\n");
+    }
+    pthread_exit(NULL);
+}
+
 // #endregion
 
 // #region Gestion de Zone
