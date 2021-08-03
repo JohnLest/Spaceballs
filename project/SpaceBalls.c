@@ -1,3 +1,4 @@
+// TODO Refactoriser le code
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -18,6 +19,8 @@
 #define BILLE 2
 #define NB_MAX_BILLES_ZONE 3
 
+#define TRUE 1
+
 // #region Déclaration variable global
 
 typedef struct TABLE
@@ -29,6 +32,8 @@ typedef struct TABLE
     pthread_mutex_t mutexTab;
     pthread_mutex_t mutexBilles;
     pthread_cond_t condTab;
+    sigset_t sigset_int;
+    sigset_t sigset_trap;
 
 } TABLE;
 
@@ -62,7 +67,8 @@ pthread_key_t keyBille;
 void *lanceBille_t(void *);
 void *bille_t(S_BILLE *);
 void *verrou_t(void *);
-void *event_t(void *);
+void *event_t(pthread_t *);
+void *pause_t(void *);
 // Gestion Zone
 void initGrille();
 char ZoneRestreinte(int l, int c);
@@ -71,12 +77,15 @@ int changeZoneRest(S_BILLE *);
 // Autre
 int *regarde(S_BILLE *);
 void verrou(int);
+void pauseJeu(int);
+void setSigaction();
+void setSigset();
 
 // #endregion
 
 int main(int argc, char *argv[])
 {
-    pthread_t _lanceBille_t, _verrou_t, _event_t;
+    pthread_t _lanceBille_t, _verrou_t, _event_t, _pause_t;
 
     // Ouverture de la fenetre graphique
     printf("(THREAD MAIN %d) Ouverture de la fenetre graphique\n", pthread_self());
@@ -91,15 +100,19 @@ int main(int argc, char *argv[])
 
     // Initialisation de la grille de jeu
     initGrille();
+    setSigaction();
+    setSigset();
 
     pthread_create(&_lanceBille_t, NULL, lanceBille_t, NULL);
     pthread_create(&_verrou_t, NULL, verrou_t, NULL);
-    pthread_create(&_event_t, NULL, event_t, NULL);
+    pthread_create(&_pause_t, NULL, pause_t, NULL);
+    pthread_create(&_event_t, NULL, event_t, _pause_t);
 
     pthread_join(_event_t, NULL);
 
     pthread_cancel(_verrou_t);
     pthread_cancel(_lanceBille_t);
+    pthread_cancel(_pause_t);
 
     // Fermeture de la grille de jeu (SDL)
     printf("(THREAD MAIN %d) Fermeture de la fenetre graphique...", pthread_self());
@@ -120,7 +133,6 @@ void *lanceBille_t(void *arg)
     pthread_key_create(&keyBille, NULL);
     for (int i = 0; i < NB_BILLES; ++i)
     {
-        //waiting(2, 0);
         S_BILLE *bille = NewBille(couleur, dir);
         pthread_create(&table.tabThreadsBilles[i], NULL, bille_t, bille);
         if (couleur == MAGENTA)
@@ -157,16 +169,7 @@ void *bille_t(struct S_BILLE *bille)
     printf("Bille au coord %d - %d de couleur %d\n", bille->L, bille->C, bille->couleur);
     table.tab[bille->L][bille->C] = BILLE;
 
-    struct sigaction *act = (struct sigaction *)calloc(1, sizeof(struct sigaction));
-    act->sa_handler = verrou;
-    act->sa_flags = 0;
-    sigaction(SIGTRAP, act, NULL);
-
-    sigset_t sigset;
-    sigemptyset(&sigset);
-    sigaddset(&sigset, SIGTRAP);
-
-    while (1)
+    while (TRUE)
     {
         int time = randTool(200, 1000);
         if (time == 1000)
@@ -185,7 +188,7 @@ void *bille_t(struct S_BILLE *bille)
         }
         else
         {
-            sigprocmask(SIG_BLOCK, &sigset, NULL);
+            sigprocmask(SIG_BLOCK, &table.sigset_trap, NULL);
             pthread_mutex_lock(&table.mutexTab);
             if (etatZone == 1 && NbBillesZone() >= 3)
             {
@@ -197,13 +200,13 @@ void *bille_t(struct S_BILLE *bille)
             }
             table.tab[bille->L][bille->C] = VIDE;
             pthread_mutex_unlock(&table.mutexTab);
-            sigprocmask(SIG_UNBLOCK, &sigset, NULL);
+            sigprocmask(SIG_UNBLOCK, &table.sigset_trap, NULL);
             bille->move(bille);
-            sigprocmask(SIG_BLOCK, &sigset, NULL);
+            sigprocmask(SIG_BLOCK, &table.sigset_trap, NULL);
             pthread_mutex_lock(&table.mutexTab);
             table.tab[bille->L][bille->C] = BILLE;
             pthread_mutex_unlock(&table.mutexTab);
-            sigprocmask(SIG_UNBLOCK, &sigset, NULL);
+            sigprocmask(SIG_UNBLOCK, &table.sigset_trap, NULL);
             pthread_setspecific(keyBille, (void *)bille);
         }
     }
@@ -212,16 +215,17 @@ void *bille_t(struct S_BILLE *bille)
 
 void *verrou_t(void *arg)
 {
-    while (1)
+    while (TRUE)
     {
         waiting(10, 0);
         pthread_kill(table.tabThreadsBilles[randTool(0, table.nbBilles - 1)], SIGTRAP);
     }
 }
 
-void *event_t(void *arg){
+void *event_t(pthread_t *_pause_t){
     EVENT_GRILLE_SDL event;
-    while (1)
+
+    while (TRUE)
     {
         event = ReadEvent();
         if (event.type == CROIX)
@@ -229,8 +233,12 @@ void *event_t(void *arg){
         else if (event.type == CLAVIER && event.touche == 'q')
             break;
         else if (event.type == CLAVIER && event.touche == 'p')
-            printf("Futur pause\n");
+            pthread_kill(_pause_t, SIGINT);
     }
+    pthread_exit(NULL);
+}
+
+void *pause_t(void *arg){
     pthread_exit(NULL);
 }
 
@@ -315,6 +323,8 @@ void verrou(int signum)
         bille_t->dir++;
 }
 
+void pauseJeu(int signum){}
+
 int *regarde(S_BILLE *bille)
 {
     static int coord[2];
@@ -343,4 +353,25 @@ int *regarde(S_BILLE *bille)
     }
     return coord;
 }
+
+void setSigaction(){
+    struct sigaction *act = (struct sigaction *)calloc(1, sizeof(struct sigaction));
+    act->sa_handler = verrou;
+    act->sa_flags = 0;
+    sigaction(SIGTRAP, act, NULL);
+
+    act->sa_handler = pauseJeu;
+    sigaction(SIGINT, act, NULL);
+
+    free(act);
+}
+
+void setSigset(){
+    sigemptyset(&table.sigset_trap);
+    sigaddset(&table.sigset_trap, SIGTRAP);
+
+    sigemptyset(&table.sigset_int);
+    sigaddset(&table.sigset_int, SIGINT);
+}
+
 // #endregion
