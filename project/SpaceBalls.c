@@ -8,17 +8,20 @@
 #include "Bille/Bille.h"
 
 // Dimensions de la grille de jeu
-#define NB_LIGNES   19
+#define NB_LIGNES 19
 #define NB_COLONNES 19
 #define NB_BILLES 12
 
 // Macros utilisees dans le tableau tab
-#define VIDE                     0
-#define MUR                      1
-#define BILLE                    2
-#define NB_MAX_BILLES_ZONE       3  // Nombre maximum de billes dans la zone restreinte
+#define VIDE 0
+#define MUR 1
+#define BILLE 2
+#define NB_MAX_BILLES_ZONE 3
 
-typedef struct TABLE{
+// #region Déclaration variable global
+
+typedef struct TABLE
+{
     int tab[NB_LIGNES][NB_COLONNES];
     int tabPointBilles[NB_BILLES];
     int nbBilles;
@@ -27,37 +30,33 @@ typedef struct TABLE{
     pthread_mutex_t mutexBilles;
     pthread_cond_t condTab;
 
-}TABLE;
+} TABLE;
 
 static TABLE table = {
-        .tab  =
-                {{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-                 {0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0},
-                 {0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0},
-                 {0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0},
-                 {0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0},
-                 {0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0},
-                 {0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0},
-                 {0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0},
-                 {0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0},
-                 {0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0},
-                 {0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0},
-                 {0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0},
-                 {0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0},
-                 {0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0},
-                 {0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0},
-                 {0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0},
-                 {0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0},
-                 {0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0},
-                 {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}},
-        .mutexTab = PTHREAD_MUTEX_INITIALIZER,
-        .mutexBilles = PTHREAD_MUTEX_INITIALIZER,
-        .nbBilles = 0
-};
+    .tab =
+        {{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+         {0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0},
+         {0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0},
+         {0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0},
+         {0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0},
+         {0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0},
+         {0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0},
+         {0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0},
+         {0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0},
+         {0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0},
+         {0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0},
+         {0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0},
+         {0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0},
+         {0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0},
+         {0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0},
+         {0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0},
+         {0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0},
+         {0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0},
+         {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}},
+    .mutexTab = PTHREAD_MUTEX_INITIALIZER,
+    .mutexBilles = PTHREAD_MUTEX_INITIALIZER,
+    .nbBilles = 0};
 pthread_key_t keyBille;
-
-
-
 
 void initGrille();
 char ZoneRestreinte(int l, int c);
@@ -65,18 +64,21 @@ int NbBillesZone();
 void *lanceBille_t(void *);
 void *bille_t(S_BILLE *);
 void *verrou_t(void *);
-int *regarde(S_BILLE*);
-int changeZoneRest(S_BILLE*);
+int *regarde(S_BILLE *);
+int changeZoneRest(S_BILLE *);
 
-///////////////////////////////////////////////////////////////////////////////////////////////////
-int main(int argc, char *argv[]) {
+// #endregion
+
+int main(int argc, char *argv[])
+{
     pthread_t _lanceBille_t, _verrou_t;
 
     // Ouverture de la fenetre graphique
     printf("(THREAD MAIN %d) Ouverture de la fenetre graphique\n", pthread_self());
     fflush(stdout);
 
-    if (OuvertureFenetreGraphique() < 0) {
+    if (OuvertureFenetreGraphique() < 0)
+    {
         printf("Erreur de OuvrirGrilleSDL\n");
         fflush(stdout);
         exit(1);
@@ -88,18 +90,21 @@ int main(int argc, char *argv[]) {
     EVENT_GRILLE_SDL event;
     char ok;
     ok = 0;
-    while (!ok) {
+    while (!ok)
+    {
         printf("boucle principal\n");
         event = ReadEvent();
         printf("Event read\n");
-        if (event.type == CROIX) ok = 1;
-        if (event.type == CLAVIER && event.touche == 'q') ok = 1;
-        if (event.type == CLIC_GAUCHE) {
+        if (event.type == CROIX)
+            ok = 1;
+        if (event.type == CLAVIER && event.touche == 'q')
+            ok = 1;
+        if (event.type == CLIC_GAUCHE)
+        {
             printf("CLick gauche\n");
             pthread_create(&_lanceBille_t, NULL, lanceBille_t, NULL);
             pthread_create(&_verrou_t, NULL, verrou_t, NULL);
         }
-
     }
 
     //pthread_join(_lanceBille_t, NULL);
@@ -117,19 +122,26 @@ int main(int argc, char *argv[]) {
     exit(0);
 }
 
-void *lanceBille_t(void *arg) {
+// #region Thread
+void *lanceBille_t(void *arg)
+{
     int couleur = ROUGE;
     int dir = HAUT;
     pthread_key_create(&keyBille, NULL);
-    for (int i = 0; i <NB_BILLES; ++i) {
+    for (int i = 0; i < NB_BILLES; ++i)
+    {
         //waiting(2, 0);
         S_BILLE *bille = NewBille(couleur, dir);
         pthread_create(&table.tabThreadsBilles[i], NULL, bille_t, bille);
-        if(couleur == MAGENTA) couleur = ROUGE;
-        else couleur++;
-        if(dir == GAUCHE) dir = HAUT;
-        else dir++;
-        table.nbBilles ++;
+        if (couleur == MAGENTA)
+            couleur = ROUGE;
+        else
+            couleur++;
+        if (dir == GAUCHE)
+            dir = HAUT;
+        else
+            dir++;
+        table.nbBilles++;
     }
     /*
     printf("1");
@@ -147,24 +159,15 @@ void *lanceBille_t(void *arg) {
     return NULL;
 }
 
-void verrou(int signum){
-    S_BILLE *bille_t = (S_BILLE*)pthread_getspecific(keyBille);
-    DessineVerrou(bille_t->L, bille_t->C);
-    waiting(randTool(4, 8), 0);
-
-    if(bille_t->dir == GAUCHE) bille_t->dir = HAUT;
-    else bille_t->dir++;
-
-}
-
-void *bille_t(struct S_BILLE *bille){ 
+void *bille_t(struct S_BILLE *bille)
+{
     pthread_mutex_lock(&table.mutexTab);
     bille->generate(bille, table.tab);
     pthread_mutex_unlock(&table.mutexTab);
     printf("Bille au coord %d - %d de couleur %d\n", bille->L, bille->C, bille->couleur);
     table.tab[bille->L][bille->C] = BILLE;
 
-    struct sigaction *act = (struct sigaction*)calloc(1, sizeof(struct sigaction));
+    struct sigaction *act = (struct sigaction *)calloc(1, sizeof(struct sigaction));
     act->sa_handler = verrou;
     act->sa_flags = 0;
     sigaction(SIGTRAP, act, NULL);
@@ -173,21 +176,33 @@ void *bille_t(struct S_BILLE *bille){
     sigemptyset(&sigset);
     sigaddset(&sigset, SIGTRAP);
 
-    while (1) {
+    while (1)
+    {
         int time = randTool(200, 1000);
-        if(time == 1000){waiting(1, 0);}
-        else waiting(0, time);
+        if (time == 1000)
+        {
+            waiting(1, 0);
+        }
+        else
+            waiting(0, time);
         waiting(1, 0);
         int *coord;
         coord = regarde(bille);
         int etatZone = changeZoneRest(bille);
-        if(table.tab[*(coord)][*(coord + 1 )] != VIDE) { bille->changeDir(bille); }
-        else {
+        if (table.tab[*(coord)][*(coord + 1)] != VIDE)
+        {
+            bille->changeDir(bille);
+        }
+        else
+        {
             sigprocmask(SIG_BLOCK, &sigset, NULL);
             pthread_mutex_lock(&table.mutexTab);
-            if (etatZone == 1 && NbBillesZone() >=3){
-                pthread_cond_wait(&table.condTab,&table.mutexTab );
-            } else if(etatZone == 2){
+            if (etatZone == 1 && NbBillesZone() >= 3)
+            {
+                pthread_cond_wait(&table.condTab, &table.mutexTab);
+            }
+            else if (etatZone == 2)
+            {
                 pthread_cond_signal(&table.condTab);
             }
             table.tab[bille->L][bille->C] = VIDE;
@@ -199,87 +214,127 @@ void *bille_t(struct S_BILLE *bille){
             table.tab[bille->L][bille->C] = BILLE;
             pthread_mutex_unlock(&table.mutexTab);
             sigprocmask(SIG_UNBLOCK, &sigset, NULL);
-            pthread_setspecific(keyBille, (void*)bille);
+            pthread_setspecific(keyBille, (void *)bille);
         }
     }
-    return  NULL;
+    return NULL;
 }
 
-void *verrou_t(void *arg){
-    while (1){
+void *verrou_t(void *arg)
+{
+    while (1)
+    {
         waiting(10, 0);
-        pthread_kill(table.tabThreadsBilles[randTool(0, table.nbBilles-1)], SIGTRAP);
+        pthread_kill(table.tabThreadsBilles[randTool(0, table.nbBilles - 1)], SIGTRAP);
     }
 }
+// #endregion
 
-int *regarde(S_BILLE* bille){
-    static int coord[2];
-    switch (bille->dir) {
-        case HAUT:
-            coord[0] = bille->L - 1;
-            coord[1] = bille->C;
-            break;
-            //return table.tab[bille->L - 1][bille->C];
-        case BAS:
-            coord[0] = bille->L + 1;
-            coord[1] = bille->C;
-            //return table.tab[bille->L + 1][bille->C];
-            break;
-        case GAUCHE:
-            coord[0] = bille->L;
-            coord[1] = bille->C - 1;
-            //return table.tab[bille->L ][bille->C - 1];
-            break;
-        case DROITE:
-            coord[0] = bille->L;
-            coord[1] = bille->C + 1 ;
-            //return table.tab[bille->L ][bille->C + 1];
-            break;
-    }
-    return coord;
-}
+// #region Gestion de Zone
 
-int changeZoneRest(S_BILLE *bille){
+int changeZoneRest(S_BILLE *bille)
+{
     int *coord;
     coord = regarde(bille);
-    if (!bille->redZone){
-        if(!ZoneRestreinte(*(coord), *(coord +1 ))) return 0;
-        else if(ZoneRestreinte(*(coord), *(coord +1 ))) {
+    if (!bille->redZone)
+    {
+        if (!ZoneRestreinte(*(coord), *(coord + 1)))
+            return 0;
+        else if (ZoneRestreinte(*(coord), *(coord + 1)))
+        {
             bille->redZone = 1;
-            return 1; }
+            return 1;
+        }
     }
-    else if (bille->redZone){
-        if(!ZoneRestreinte(bille->L, bille->C)) {
+    else if (bille->redZone)
+    {
+        if (!ZoneRestreinte(bille->L, bille->C))
+        {
             bille->redZone = 0;
-            return 2; }
-        else if(ZoneRestreinte(bille->L, bille->C)) return 0;
+            return 2;
+        }
+        else if (ZoneRestreinte(bille->L, bille->C))
+            return 0;
     }
     return 3;
 }
-/*********************************************************************************************/
-void initGrille() {
+
+void initGrille()
+{
     int l, c;
-    for (l = 0; l < NB_LIGNES; l++) {
-        for (c = 0; c < NB_COLONNES; c++) {
-            if (table.tab[l][c] == MUR) {
+    for (l = 0; l < NB_LIGNES; l++)
+    {
+        for (c = 0; c < NB_COLONNES; c++)
+        {
+            if (table.tab[l][c] == MUR)
+            {
                 DessineMur(l, c);
             }
         }
     }
 }
 
-/*********************************************************************************************/
-char ZoneRestreinte(int l, int c) {
-    if ((c < 6) || (c > 12)) return 0;
-    if ((l < 6) || (l > 12)) return 0;
+char ZoneRestreinte(int l, int c)
+{
+    if ((c < 6) || (c > 12))
+        return 0;
+    if ((l < 6) || (l > 12))
+        return 0;
     return 1;
 }
 
-int NbBillesZone() {
+int NbBillesZone()
+{
     int l, c, nb = 0;
     for (l = 6; l <= 12; l++)
         for (c = 6; c <= 12; c++)
-            if (table.tab[l][c] == BILLE) nb++;
+            if (table.tab[l][c] == BILLE)
+                nb++;
     return nb;
 }
 
+// #endregion
+
+// #region Autre
+
+void verrou(int signum)
+{
+    S_BILLE *bille_t = (S_BILLE *)pthread_getspecific(keyBille);
+    DessineVerrou(bille_t->L, bille_t->C);
+    waiting(randTool(4, 8), 0);
+
+    if (bille_t->dir == GAUCHE)
+        bille_t->dir = HAUT;
+    else
+        bille_t->dir++;
+}
+
+int *regarde(S_BILLE *bille)
+{
+    static int coord[2];
+    switch (bille->dir)
+    {
+    case HAUT:
+        coord[0] = bille->L - 1;
+        coord[1] = bille->C;
+        break;
+        //return table.tab[bille->L - 1][bille->C];
+    case BAS:
+        coord[0] = bille->L + 1;
+        coord[1] = bille->C;
+        //return table.tab[bille->L + 1][bille->C];
+        break;
+    case GAUCHE:
+        coord[0] = bille->L;
+        coord[1] = bille->C - 1;
+        //return table.tab[bille->L ][bille->C - 1];
+        break;
+    case DROITE:
+        coord[0] = bille->L;
+        coord[1] = bille->C + 1;
+        //return table.tab[bille->L ][bille->C + 1];
+        break;
+    }
+    return coord;
+}
+// #endregion
