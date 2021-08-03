@@ -116,9 +116,11 @@ int main(int argc, char *argv[])
 
     pthread_join(_event_t, NULL);
 
+    pthread_cancel(_pause_t);
     pthread_cancel(_verrou_t);
     pthread_cancel(_lanceBille_t);
-    pthread_cancel(_pause_t);
+    for (int i = 0; i < table.nbBilles; i++) 
+        pthread_cancel(table.tabThreadsBilles[i]);
 
     // Fermeture de la grille de jeu (SDL)
     printf("(THREAD MAIN %d) Fermeture de la fenetre graphique...", pthread_self());
