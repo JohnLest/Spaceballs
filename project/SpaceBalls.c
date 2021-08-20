@@ -1,4 +1,3 @@
-// TODO Refactoriser le code
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -68,18 +67,18 @@ static TABLE table = {
 pthread_key_t keyBille;
 int freeze = 1;
 
-// Threads
+// --- Threads ---
 void *lanceBille_t(void *);
 void *bille_t(S_BILLE *);
 void *verrou_t(void *);
 void *event_t(pthread_t *);
 void *pause_t(void *);
-// Gestion Zone
+// --- Gestion Zone ---
 void initGrille();
 char ZoneRestreinte(int l, int c);
 int NbBillesZone();
 int changeZoneRest(S_BILLE *);
-// Autre
+// --- Autre ---
 int *regarde(S_BILLE *);
 void verrou(int);
 void pauseJeu(int);
@@ -155,19 +154,6 @@ void *lanceBille_t(void *arg)
             dir++;
         table.nbBilles++;
     }
-    /*
-    printf("1");
-    for (int i = 0; i < NB_BILLES; ++i) {
-        pthread_cancel(table.bille_t[i]);
-    }
-    
-    printf("2");
-    pthread_join(table.tabThreadsBilles[0], NULL);
-    for (int i = 0; i < NB_BILLES; ++i) {
-        pthread_join(table.tabThreadsBilles[i], NULL);
-    }
-    printf("3");
-    */
     return NULL;
 }
 
@@ -177,7 +163,6 @@ void *bille_t(struct S_BILLE *bille)
     pthread_mutex_lock(&table.mutexTab);
     bille->generate(bille, table.tab);
     pthread_mutex_unlock(&table.mutexTab);
-    printf("Bille au coord %d - %d de couleur %d\n", bille->L, bille->C, bille->couleur);
     table.tab[bille->L][bille->C] = BILLE;
 
     while (TRUE)
@@ -356,21 +341,17 @@ int *regarde(S_BILLE *bille)
         coord[0] = bille->L - 1;
         coord[1] = bille->C;
         break;
-        //return table.tab[bille->L - 1][bille->C];
     case BAS:
         coord[0] = bille->L + 1;
         coord[1] = bille->C;
-        //return table.tab[bille->L + 1][bille->C];
         break;
     case GAUCHE:
         coord[0] = bille->L;
         coord[1] = bille->C - 1;
-        //return table.tab[bille->L ][bille->C - 1];
         break;
     case DROITE:
         coord[0] = bille->L;
         coord[1] = bille->C + 1;
-        //return table.tab[bille->L ][bille->C + 1];
         break;
     }
     return coord;
